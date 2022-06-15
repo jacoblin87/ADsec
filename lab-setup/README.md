@@ -74,12 +74,11 @@ Add-LocalGroupMember -Group "Administrators" -Member "domain\user or group"
    ```
 
 3. 設定neo4j
-   - After successful installation, open Firefox and navigate to the neo4j web interface at [http://127.0.0.1:7474/browser/](http://127.0.0.1:7474/browser/). 
-   - Log in with the default credentials (neo4j/neo4j) and choose a new password for the neo4j user. This step is mandatory, otherwise we can't use Bloodhound later on so make sure that you remember the password.
+   - 使用Firefox瀏覽[http://127.0.0.1:7474/browser/](http://127.0.0.1:7474/browser/). 
+   - 使用預設密碼 (neo4j/neo4j) 並設定新密碼
 
-4. Set up impacket (we'll need this later for NTLM relay). Open an administrative shell and run
+4. 安裝impacket
    ```
    pip install pyreadline
    pip install impacket
    ```
-5. You may also want to install a text editor of your choice.
