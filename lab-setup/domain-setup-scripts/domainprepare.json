@@ -178,19 +178,19 @@
       },
       {
         "Name": "delegation permission",
-        "cmd": "$spn = 'CIFS/adsec-01.contoso.com'; Set-ADUser -Identity 'taskservice' -Add @{'msDS-AllowedToDelegateTo'=@($spn)}"
+        "cmd": "$spn = 'CIFS/ad-01.contoso.com'; Set-ADUser -Identity 'taskservice' -Add @{'msDS-AllowedToDelegateTo'=@($spn)}"
     },
     {
         "Name": "delegation permission",
-        "cmd": "$spn = 'HTTP/adsec-01.contoso.com'; Set-ADUser -Identity 'taskservice' -Add @{'msDS-AllowedToDelegateTo'=@($spn)}"
+        "cmd": "$spn = 'HTTP/ad-01.contoso.com'; Set-ADUser -Identity 'taskservice' -Add @{'msDS-AllowedToDelegateTo'=@($spn)}"
     },
     {
         "Name": "delegation permission",
-        "cmd": "$spn = 'HOST/adsec-01.contoso.com'; Set-ADUser -Identity 'taskservice' -Add @{'msDS-AllowedToDelegateTo'=@($spn)}"
+        "cmd": "$spn = 'HOST/ad-01.contoso.com'; Set-ADUser -Identity 'taskservice' -Add @{'msDS-AllowedToDelegateTo'=@($spn)}"
     },
     {
         "Name": "delegation permission",
-        "cmd": "$spn = 'RPCSS/adsec-01.contoso.com'; Set-ADUser -Identity 'taskservice' -Add @{'msDS-AllowedToDelegateTo'=@($spn)}"
+        "cmd": "$spn = 'RPCSS/ad-01.contoso.com'; Set-ADUser -Identity 'taskservice' -Add @{'msDS-AllowedToDelegateTo'=@($spn)}"
     },
     {
         "Name": "set spn for service account",

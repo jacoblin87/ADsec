@@ -1,9 +1,9 @@
-# Lab Setup Guide
+# Lab 設定
 
 ## #1 Basic Lab Setup 
 
 
-### Setup virtual machines manually
+### 安裝虛擬環境
 
 使用Vmware架設以下三部機器，並將機器放置同一內網
 
@@ -16,7 +16,20 @@
 
 每台機器先執行以下步驟
 
-- 將 DNS server的IP指向 ADSEC-DC
+- 將 DNS server的IP指向 AD-DC
+
+```powershell
+$IntId = Get-NetIPAddress -ipaddress 192.168.1.* | Select-Object -Property InterfaceIndex
+$IntId = $IntId."InterfaceIndex"
+$DCIP = "192.168.1.118"
+Set-DnsClientServerAddress -InterfaceIndex $IntId -ServerAddress($DCIP,"8.8.8.8")
+```
+
+- 關閉IPV6
+```powershell
+Disable-NetAdapterBinding –InterfaceAlias "Ethernet0" –ComponentID ms_tcpip6
+```
+
 - 關閉防火牆 (以管理員模式執行powershell)
    - `Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled False`
 - 反安裝Windows Defender
@@ -33,7 +46,21 @@
 
 #### Join member server
 
-將 ADS-00 and AD-01加入Domain
+將 AD-00 and AD-01加入Domain
+
+```powershell
+$SecPassword = ConvertTo-SecureString "P@ssw0rd123!!!" -AsPlainText -Force
+
+$Cred = New-Object System.Management.Automation.PSCredential("contoso\administrator",$SecPassword)
+Add-Computer -DomainName contoso.com -Credential $Cred -Restart -force -newname AD-00
+```
+
+```powershell
+$SecPassword = ConvertTo-SecureString "P@ssw0rd123!!!" -AsPlainText -Force
+
+$Cred = New-Object System.Management.Automation.PSCredential("contoso\administrator",$SecPassword)
+Add-Computer -DomainName contoso.com -Credential $Cred -Restart -force -newname AD-00
+```
 
 
 ## #2 Prepare domain
@@ -52,9 +79,15 @@ cat -raw .\domainprepare.ps1 | iex
 - 將Domain user `john` 加入AD-00的本機管理員群組 
 - 將Domain user `blee` 加入AD-01的本機管理員群組 
 
+- AD-00
 ```powershell
-Add-LocalGroupMember -Group "Administrators" -Member "domain\user or group"
+Add-LocalGroupMember -Group "Administrators" -Member "contoso\john"
 ```
+- AD-01
+```powershell
+Add-LocalGroupMember -Group "Administrators" -Member "contoso\blee"
+```
+
 
 | Display Name        | samAccountName | Password |	
 | ------------- |-------------| -----|
