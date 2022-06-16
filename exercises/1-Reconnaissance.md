@@ -2,54 +2,51 @@
 
 ## Tools
 
-You can find all tools needed in the ["attacker-tools.zip"-file](../exercises/attacker-tools). The links below are for your own reference.
-
-Tools needed:
+使用attacker-tool2底下的腳本PowerView
 
 PowerView: [https://github.com/PowerShellMafia/PowerSploit/blob/dev/Recon/PowerView.ps1](https://github.com/PowerShellMafia/PowerSploit/blob/dev/Recon/PowerView.ps1)
 
 ## Exercise
 
-We’ll use PowerView in this lab exercise. Make sure to load it into your Powershell session like this before you start. 
 
 ```
 cd C:\attacker-tools
 cat -raw ".\PowerView.ps1" | iex
 ```
 
-Get basic domain info
+取得Domain基本資訊以及網域控制站資訊
 
 ```
 Get-Domain
 Get-DomainController
 ```
 
-Get all domain computer; Note: usually you would use a filter since this gives you a ton of results in a real domain environment. 
+列舉網域內所有的電腦
 ```
 Get-DomainComputer
 ```
 
-Get all domain computer but display only name,dnsname and creation date and format as a table
+列舉網域內電腦的computer account和DNS名稱以及什麼時候創建
 ```
 Get-DomainComputer | select samaccountname,dnshostname,whencreated | Format-Table
 ```
 
-Get all domain user
+列舉所有Domain user
 ```
 Get-DomainUser
 ```
 
-Get all user who are a member of the domain admins group
+列舉有Domain admin權限的Domain user還有詳細資訊
 ```
 Get-DomainUser | ? {$_.memberof -like "*Domain Admins*"}
 ```
 
-Get all user who are a member of the domain admins group, but show only the name
+列舉有Domain admin權限的Domain user的名稱
 ```
 Get-DomainUser | ? {$_.memberof -like "*Domain Admins*"} | select samaccountname
 ```
 
-Get all custom groups, assuming that all groups which are not stored at the default locations are custom (obviously error prone but mostly effective)
+取得非預設的群組資訊
 ```
 Get-DomainGroup | ? { $_.distinguishedname -notlike "*CN=Users*" -and $_.distinguishedname -notlike "*CN=Builtin*"} | select samaccountname,description
 ```
