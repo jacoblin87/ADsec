@@ -21,7 +21,7 @@
 ```powershell
 $IntId = Get-NetIPAddress -ipaddress 192.168.1.* | Select-Object -Property InterfaceIndex
 $IntId = $IntId."InterfaceIndex"
-$DCIP = "192.168.1.130"
+$DCIP = "192.168.1.118"
 Set-DnsClientServerAddress -InterfaceIndex $IntId -ServerAddress($DCIP,"8.8.8.8")
 ```
 

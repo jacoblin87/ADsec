@@ -2,14 +2,14 @@
 
 ## Tools
 
-使用attacker-tool2底下的腳本PowerView
+使用attacker-tools2底下的腳本PowerView
 
 PowerView: [https://github.com/PowerShellMafia/PowerSploit/blob/dev/Recon/PowerView.ps1](https://github.com/PowerShellMafia/PowerSploit/blob/dev/Recon/PowerView.ps1)
 
 ## Exercise
 
 ```powershell
-cd C:\attacker-tools
+cd C:\users\john\Desktop\ADSec\exercises\attacker-tools\attacker-tools-2\
 cat -raw ".\PowerView.ps1" | iex
 ```
 

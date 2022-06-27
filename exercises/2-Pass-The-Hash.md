@@ -24,7 +24,7 @@
 - 使用最高權限打開mimikatz
 
 ```powershell
-cd C:\attacker-tools
+cd C:\Users\john\Desktop\exercises\attacker-tools\attakcers-tools-2\
 .\mimikatz_trunk\x64\mimikatz.exe
 ```
 
